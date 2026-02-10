@@ -12,7 +12,15 @@ from fastmcp_tool.main import fastmcp_tool
 
 def test_version() -> None:
     """Test that version is defined."""
-    assert __version__ == "0.1.1"
+    assert __version__ == "0.1.2"
+
+
+async def test_version_command() -> None:
+    """Test that the version command prints the version."""
+    runner = CliRunner()
+    result = await runner.invoke(fastmcp_tool, ["version"])
+    assert result.exit_code == 0
+    assert __version__ in result.output
 
 
 async def test_help() -> None:

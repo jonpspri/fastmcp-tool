@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastmcp-tool"
-version = "0.1.1"
+version = "0.1.2"
 description = "Command line tool for interacting with MCP servers"
 readme = "README.md"
 requires-python = ">=3.12"

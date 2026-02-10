@@ -7,6 +7,8 @@ import asyncclick as click
 from fastmcp.client import Client
 from fastmcp.client.transports import StdioTransport, StreamableHttpTransport
 
+from fastmcp_tool import __version__
+
 logger = getLogger("fastmcp_tool")
 
 
@@ -97,6 +99,12 @@ async def prompts(ctx: click.Context) -> None:
     async with await ctx.obj as client:
         prompt_list = await client.list_prompts()
         click.echo(json.dumps([prompt.model_dump(mode="json") for prompt in prompt_list]))
+
+
+@fastmcp_tool.command()
+def version() -> None:
+    """Print the version."""
+    click.echo(f"fastmcp-tool {__version__}")
 
 
 if __name__ == "__main__":
