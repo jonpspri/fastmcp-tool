@@ -1,4 +1,5 @@
 """Command line tool for interacting with an MCP server."""
+
 import json
 from logging import getLogger
 
@@ -21,11 +22,17 @@ logger = getLogger("fastmcp_tool")
     is_flag=True,
     help="Enable debug logging including stdio server stderr output",
 )
+@click.option(
+    "--bearer-token",
+    default=None,
+    help="Bearer token for HTTP server authentication",
+)
 @click.pass_context
 def fastmcp_tool(
     ctx: click.Context,
     server_str: str | None,
     debug: bool,  # noqa: ARG001, FBT001  # debug needed for FastMCP Commit 05a73e1
+    bearer_token: str | None,
 ) -> None:
     """Command line tool for interacting with an MCP server."""
     if not isinstance(server_str, str):
@@ -33,8 +40,10 @@ def fastmcp_tool(
         return
     transport: StdioTransport | StreamableHttpTransport
     if server_str.startswith(("http://", "https://")):
-        transport = StreamableHttpTransport(url=server_str)
+        transport = StreamableHttpTransport(url=server_str, auth=bearer_token)
     else:
+        if bearer_token is not None:
+            logger.warning("--bearer-token is only supported for HTTP servers; ignoring.")
         transport = StdioTransport(
             command="bash",
             args=["-c", server_str],
@@ -43,6 +52,7 @@ def fastmcp_tool(
         )
     ctx.obj = ctx.with_async_resource(Client(transport=transport))
 
+
 @fastmcp_tool.command()
 @click.pass_context
 async def tools(ctx: click.Context) -> None:
@@ -50,6 +60,7 @@ async def tools(ctx: click.Context) -> None:
     async with await ctx.obj as client:
         tool_list = await client.list_tools()
         click.echo(json.dumps([tool.model_dump(mode="json") for tool in tool_list]))
+
 
 @fastmcp_tool.command()
 @click.argument("tool_name")
@@ -69,6 +80,7 @@ async def call(ctx: click.Context, tool_name: str, params: str) -> None:
             else:
                 click.echo(f"[{item.type} content]")
 
+
 @fastmcp_tool.command()
 @click.pass_context
 async def resources(ctx: click.Context) -> None:
@@ -77,6 +89,7 @@ async def resources(ctx: click.Context) -> None:
         resource_list = await client.list_resources()
         click.echo(json.dumps([resource.model_dump(mode="json") for resource in resource_list]))
 
+
 @fastmcp_tool.command()
 @click.pass_context
 async def prompts(ctx: click.Context) -> None:
@@ -84,6 +97,7 @@ async def prompts(ctx: click.Context) -> None:
     async with await ctx.obj as client:
         prompt_list = await client.list_prompts()
         click.echo(json.dumps([prompt.model_dump(mode="json") for prompt in prompt_list]))
+
 
 if __name__ == "__main__":
     fastmcp_tool()
