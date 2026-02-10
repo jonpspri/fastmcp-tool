@@ -1,6 +1,8 @@
 """Tests for the fastmcp-tool CLI."""
 
+import json
 import logging
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -8,6 +10,8 @@ from asyncclick.testing import CliRunner
 
 from fastmcp_tool import __version__
 from fastmcp_tool.main import fastmcp_tool
+
+ECHO_SERVER = f"uv run {Path(__file__).parent / 'echo_server.py'}"
 
 
 def test_version() -> None:
@@ -77,3 +81,55 @@ async def test_no_server_specified() -> None:
     result = await runner.invoke(fastmcp_tool, ["tools"])
     # Exits with error when no server is provided
     assert result.exit_code == 1
+
+
+async def test_call_with_params() -> None:
+    """Test calling a tool with --params."""
+    runner = CliRunner()
+    result = await runner.invoke(
+        fastmcp_tool,
+        ["--server", ECHO_SERVER, "call", "echo", "--params", '{"message": "hello"}'],
+    )
+    assert result.exit_code == 0
+    assert "hello" in result.output
+
+
+async def test_call_with_params_file(tmp_path: Path) -> None:
+    """Test that --params-file reads parameters from a JSON file."""
+    params_file = tmp_path / "params.json"
+    params_file.write_text(json.dumps({"message": "from file"}))
+
+    runner = CliRunner()
+    result = await runner.invoke(
+        fastmcp_tool,
+        ["--server", ECHO_SERVER, "call", "echo",
+         "--params-file", str(params_file)],
+    )
+    assert result.exit_code == 0
+    assert "from file" in result.output
+
+
+async def test_call_params_and_params_file_mutually_exclusive(tmp_path: Path) -> None:
+    """Test that --params and --params-file cannot be used together."""
+    params_file = tmp_path / "params.json"
+    params_file.write_text(json.dumps({"message": "x"}))
+
+    runner = CliRunner()
+    result = await runner.invoke(
+        fastmcp_tool,
+        ["--server", ECHO_SERVER, "call", "echo",
+         "--params", '{"message": "y"}', "--params-file", str(params_file)],
+    )
+    assert result.exit_code != 0
+    assert "mutually exclusive" in result.output
+
+
+async def test_call_params_file_not_found() -> None:
+    """Test that --params-file with a nonexistent file fails."""
+    runner = CliRunner()
+    result = await runner.invoke(
+        fastmcp_tool,
+        ["--server", ECHO_SERVER, "call", "echo",
+         "--params-file", "/nonexistent/params.json"],
+    )
+    assert result.exit_code != 0

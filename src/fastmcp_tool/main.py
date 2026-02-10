@@ -2,6 +2,7 @@
 
 import json
 from logging import getLogger
+from pathlib import Path
 
 import asyncclick as click
 from fastmcp.client import Client
@@ -68,12 +69,26 @@ async def tools(ctx: click.Context) -> None:
 
 @fastmcp_tool.command()
 @click.argument("tool_name")
-@click.option("--params", default="{}", help="JSON string of parameters to pass to the tool")
+@click.option("--params", default=None, help="JSON string of parameters to pass to the tool")
+@click.option(
+    "--params-file",
+    default=None,
+    type=click.Path(exists=True, dir_okay=False),
+    help="Path to a JSON file containing parameters to pass to the tool",
+)
 @click.pass_context
-async def call(ctx: click.Context, tool_name: str, params: str) -> None:
+async def call(
+    ctx: click.Context, tool_name: str, params: str | None, params_file: str | None
+) -> None:
     """Call a tool with parameters."""
+    if params is not None and params_file is not None:
+        msg = "--params and --params-file are mutually exclusive."
+        raise click.UsageError(msg)
+    if params_file is not None:
+        params_dict = json.loads(Path(params_file).read_text())
+    else:
+        params_dict = json.loads(params or "{}")
     async with await ctx.obj as client:
-        params_dict = json.loads(params)
         result = await client.call_tool(tool_name, params_dict)
     if result.structured_content:
         click.echo(json.dumps(result.structured_content))
