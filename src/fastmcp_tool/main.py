@@ -37,6 +37,8 @@ def fastmcp_tool(
     bearer_token: str | None,
 ) -> None:
     """Command line tool for interacting with an MCP server."""
+    if ctx.invoked_subcommand == "version":
+        return
     if not isinstance(server_str, str):
         logger.error("No server specified. Use --server to specify an MCP server.")
         return

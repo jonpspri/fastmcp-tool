@@ -16,11 +16,12 @@ def test_version() -> None:
 
 
 async def test_version_command() -> None:
-    """Test that the version command prints the version."""
+    """Test that the version command prints the version without requiring --server."""
     runner = CliRunner()
     result = await runner.invoke(fastmcp_tool, ["version"])
     assert result.exit_code == 0
     assert __version__ in result.output
+    assert "No server specified" not in result.output
 
 
 async def test_help() -> None:
