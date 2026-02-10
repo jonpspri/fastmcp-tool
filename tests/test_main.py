@@ -12,7 +12,7 @@ from fastmcp_tool.main import fastmcp_tool
 
 def test_version() -> None:
     """Test that version is defined."""
-    assert __version__ == "0.1.0"
+    assert __version__ == "0.1.1"
 
 
 async def test_help() -> None:
