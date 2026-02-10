@@ -46,8 +46,14 @@ fastmcp-tool --server https://mcp.example.com/sse tools
 Call a specific tool with optional JSON parameters:
 
 ```bash
+# Pass parameters as a JSON string
 fastmcp-tool --server https://mcp.example.com/sse call my_tool --params '{"key": "value"}'
+
+# Or read parameters from a JSON file
+fastmcp-tool --server https://mcp.example.com/sse call my_tool --params-file params.json
 ```
+
+The `--params` and `--params-file` options are mutually exclusive.
 
 #### List Resources
 
@@ -71,7 +77,15 @@ fastmcp-tool --server https://mcp.example.com/sse prompts
 |--------|-------------|
 | `--server` | MCP server URL or stdio command |
 | `--debug` | Enable debug logging |
+| `--bearer-token` | Bearer token for HTTP server authentication |
 | `--help` | Show help message |
+
+### Call Options
+
+| Option | Description |
+|--------|-------------|
+| `--params` | JSON string of parameters to pass to the tool |
+| `--params-file` | Path to a JSON file containing parameters |
 
 ## Examples
 
@@ -81,6 +95,9 @@ fastmcp-tool --server "uv run my_server.py" tools
 
 # Call a tool with parameters
 fastmcp-tool --server https://api.example.com/mcp call search --params '{"query": "hello"}'
+
+# Call a tool with parameters from a file
+fastmcp-tool --server https://api.example.com/mcp call search --params-file search_params.json
 
 # List resources with debug output
 fastmcp-tool --server "python server.py" --debug resources

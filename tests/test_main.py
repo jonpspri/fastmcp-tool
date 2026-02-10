@@ -16,7 +16,7 @@ ECHO_SERVER = f"uv run {Path(__file__).parent / 'echo_server.py'}"
 
 def test_version() -> None:
     """Test that version is defined."""
-    assert __version__ == "0.1.2"
+    assert __version__ == "0.1.3"
 
 
 async def test_version_command() -> None:
