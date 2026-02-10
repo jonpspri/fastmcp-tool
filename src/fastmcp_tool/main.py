@@ -1,7 +1,5 @@
 """Command line tool for interacting with an MCP server."""
 import json
-import os
-import sys
 from logging import getLogger
 
 import asyncclick as click
@@ -10,44 +8,58 @@ from fastmcp.client.transports import StdioTransport, StreamableHttpTransport
 
 logger = getLogger("fastmcp_tool")
 
-@click.group()
-@click.option("--server", "server_str", default=None, help="MCP Server - eiter a URL or a stream to run stdio")
-@click.option("--debug", is_flag=True, help="Enable debug logging incuding stdio server stderr output")
-@click.pass_context
 
-def fastmcp_tool(ctx, server_str, debug):  # noqa: ARG001  # debug needed for FastMCP Commit 05a73e1
+@click.group()
+@click.option(
+    "--server",
+    "server_str",
+    default=None,
+    help="MCP Server - either a URL or a stream to run stdio",
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    help="Enable debug logging including stdio server stderr output",
+)
+@click.pass_context
+def fastmcp_tool(
+    ctx: click.Context,
+    server_str: str | None,
+    debug: bool,  # noqa: ARG001, FBT001  # debug needed for FastMCP Commit 05a73e1
+) -> None:
     """Command line tool for interacting with an MCP server."""
     if not isinstance(server_str, str):
         logger.error("No server specified. Use --server to specify an MCP server.")
         return
+    transport: StdioTransport | StreamableHttpTransport
     if server_str.startswith(("http://", "https://")):
         transport = StreamableHttpTransport(url=server_str)
     else:
         transport = StdioTransport(
-                command="bash",
-                args=["-c", server_str],
-                # Waiting for FastMCP Commit 05a73e1 to be released
-                # log_file = sys.stderr if debug else os.devnull
-                )
+            command="bash",
+            args=["-c", server_str],
+            # Waiting for FastMCP Commit 05a73e1 to be released
+            # log_file = sys.stderr if debug else os.devnull
+        )
     ctx.obj = ctx.with_async_resource(Client(transport=transport))
 
 @fastmcp_tool.command()
 @click.pass_context
-async def tools(ctx):
+async def tools(ctx: click.Context) -> None:
     """List available tools."""
     async with await ctx.obj as client:
-        tools = await client.list_tools()
-        click.echo( json.dumps([tool.model_dump(mode="json") for tool in tools]))
+        tool_list = await client.list_tools()
+        click.echo(json.dumps([tool.model_dump(mode="json") for tool in tool_list]))
 
 @fastmcp_tool.command()
 @click.argument("tool_name")
 @click.option("--params", default="{}", help="JSON string of parameters to pass to the tool")
 @click.pass_context
-async def call(ctx, tool_name, params):
+async def call(ctx: click.Context, tool_name: str, params: str) -> None:
     """Call a tool with parameters."""
     async with await ctx.obj as client:
-        params = json.loads(params)
-        result = await client.call_tool(tool_name, params)
+        params_dict = json.loads(params)
+        result = await client.call_tool(tool_name, params_dict)
     if result.structured_content:
         click.echo(json.dumps(result.structured_content))
     else:
@@ -59,19 +71,19 @@ async def call(ctx, tool_name, params):
 
 @fastmcp_tool.command()
 @click.pass_context
-async def resources(ctx):
+async def resources(ctx: click.Context) -> None:
     """List available resources."""
     async with await ctx.obj as client:
-        resources = await client.list_resources()
-        click.echo( json.dumps([resource.model_dump(mode="json") for resource in resources]))
+        resource_list = await client.list_resources()
+        click.echo(json.dumps([resource.model_dump(mode="json") for resource in resource_list]))
 
 @fastmcp_tool.command()
 @click.pass_context
-async def prompts(ctx):
+async def prompts(ctx: click.Context) -> None:
     """List available prompts."""
     async with await ctx.obj as client:
-        prompts = await client.list_prompts()
-        click.echo( json.dumps([prompt.model_dump(mode="json") for prompt in prompts]))
+        prompt_list = await client.list_prompts()
+        click.echo(json.dumps([prompt.model_dump(mode="json") for prompt in prompt_list]))
 
 if __name__ == "__main__":
     fastmcp_tool()

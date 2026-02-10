@@ -1,17 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "fastmcp-tool"
 version = "0.1.0"
-description = "Add your description here"
+description = "Command line tool for interacting with MCP servers"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "Apache-2.0"
+authors = [
+    { name = "Jonathan Springer", email = "jps@s390x.com" }
+]
+keywords = ["mcp", "fastmcp", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.12",
+]
 dependencies = [
     "asyncclick>=8.3.0.7",
     "fastmcp>=2.12.4",
 ]
 
+[project.scripts]
+fastmcp-tool = "fastmcp_tool.main:fastmcp_tool"
+
+[project.urls]
+Homepage = "https://github.com/jonpspri/fastmcp-tool"
+Repository = "https://github.com/jonpspri/fastmcp-tool"
+
 [dependency-groups]
 dev = [
     "mypy>=1.18.2",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
     "ruff>=0.14.0",
 ]
 
@@ -77,4 +102,17 @@ ignore = [
     #  TODO:  Work on bringing these into play
     "PLR0911", "PLR0912", "PLR0913", "PLR0915",  # Complexity findings that make the AI cry
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]  # Allow assert in tests
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
 
